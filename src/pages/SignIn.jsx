@@ -51,7 +51,7 @@ const SignIn = () => {
         <>
             <form onSubmit={onSubmit}>
                 <input
-                    type="text"
+                    type="email"
                     placeholder="email"
                     id="email"
                     value={email}

@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import useAuthStatus from "../hooks/useAuthStatus";
 // firebase imports
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { app } from "../firebase.config";
 
 const SignIn = () => {
+    const { loggedIn } = useAuthStatus(); // Custom hook to check auth status
+
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -12,6 +15,13 @@ const SignIn = () => {
     const { email, password } = formData;
 
     const navigate = useNavigate();
+
+    // Redirect user to homepage if already logged in
+    useEffect(() => {
+        if (loggedIn) {
+            navigate("/");
+        }
+    });
 
     // onChange function
     const onChange = (e) => {
@@ -37,6 +47,7 @@ const SignIn = () => {
                 password
             );
 
+            // if user is signed in successfully, navigate to home page
             if (userCredential.user) {
                 navigate("/");
                 console.log("User signed in successfully");

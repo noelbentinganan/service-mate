@@ -1,4 +1,13 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+// firebase imports
+import { app, db } from "../firebase.config"; // Ensure this path is correct
+import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    updateProfile,
+} from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 
 const SignUp = () => {
     const [formData, setFormData] = useState({
@@ -6,11 +15,12 @@ const SignUp = () => {
         lastName: "",
         address: "",
         email: "",
-        password1: "",
-        password2: "",
+        password: "",
     });
-    const { firstName, lastName, address, email, password1, password2 } =
-        formData;
+
+    const { firstName, lastName, address, email, password } = formData;
+
+    const navigate = useNavigate();
 
     // onChange function
     const onChange = (e) => {
@@ -20,9 +30,42 @@ const SignUp = () => {
         }));
     };
 
+    // onSubmit function
+    const onSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const auth = getAuth(app);
+
+            const userCredential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
+
+            // Get the newly created user
+            const user = userCredential.user;
+
+            updateProfile(user, {
+                displayName: firstName, // Set the displayName as firstName
+            });
+
+            // Save to firestore, minus the password
+            const formDataCopy = { ...formData };
+            delete formDataCopy.password;
+            formDataCopy.timestamp = serverTimestamp();
+
+            await setDoc(doc(db, "users", user.uid), formDataCopy);
+
+            navigate("/");
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
     return (
         <>
-            <form>
+            <form onSubmit={onSubmit}>
                 <input
                     type="text"
                     placeholder="First Name"
@@ -58,16 +101,8 @@ const SignUp = () => {
                 <input
                     type="password"
                     placeholder="Password"
-                    id="password1"
-                    value={password1}
-                    onChange={onChange}
-                />
-
-                <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    id="password2"
-                    value={password2}
+                    id="password"
+                    value={password}
                     onChange={onChange}
                 />
 
